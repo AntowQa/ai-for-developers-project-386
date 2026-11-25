@@ -1,0 +1,10 @@
+{
+  "name": "sdkgen",
+  "private": true,
+  "packageManager": "pnpm@10.26.0",
+  "devDependencies": {
+    "openapi-typescript": "7.13.0",
+    "swagger2openapi": "7.0.8",
+    "typescript": "5.9.3"
+  }
+}

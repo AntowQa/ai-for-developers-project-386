@@ -1,0 +1,23 @@
+version: "2"
+run:
+  timeout: 3m
+linters:
+  default: standard
+  exclusions:
+    generated: strict
+    paths:
+      - gen
+formatters:
+  enable:
+    - gofumpt
+    - gci
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/AntowQa/ai-for-developers-project-386/api)
+  exclusions:
+    generated: strict
+    paths:
+      - gen

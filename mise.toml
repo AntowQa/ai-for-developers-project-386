@@ -1,0 +1,27 @@
+[tools]
+go = "1.26.1"
+node = "24.14.0"
+pnpm = "10.26.0"
+golangci-lint = "2.11.2"
+hk = "2.14.0"
+
+[env]
+DATABASE_URL = "postgres://booking:booking@127.0.0.1:54329/booking?sslmode=disable"
+
+[tasks.setup]
+description = "Install dependencies and git hooks"
+run = """
+set -eu
+(cd api && go mod download)
+(cd web && pnpm install --frozen-lockfile)
+(cd tools/sdkgen && pnpm install --frozen-lockfile)
+hk install
+"""
+
+[tasks.generate]
+description = "Generate OpenAPI and TypeScript types from TypeSpec"
+run = "pnpm --dir tools/sdkgen run generate"
+
+[tasks.check]
+description = "Regenerate contracts, lint, test, and build"
+run = "scripts/check.sh"

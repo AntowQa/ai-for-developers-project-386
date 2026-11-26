@@ -1,0 +1,5 @@
+services:
+  postgres:
+    # Host port 5432 is often taken by a local Postgres. Checks use 54329.
+    ports:
+      - "127.0.0.1:54329:5432"

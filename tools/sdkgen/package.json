@@ -1,0 +1,15 @@
+{
+  "name": "sdkgen",
+  "private": true,
+  "packageManager": "pnpm@10.26.0",
+  "scripts": {
+    "generate": "sh generate.sh"
+  },
+  "devDependencies": {
+    "@typespec/compiler": "1.18.0",
+    "@typespec/http": "1.18.0",
+    "@typespec/openapi3": "1.18.0",
+    "openapi-typescript": "7.13.0",
+    "typescript": "5.9.3"
+  }
+}

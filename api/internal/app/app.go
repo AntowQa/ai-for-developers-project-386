@@ -9,21 +9,17 @@ import (
 	"os"
 	"time"
 
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 
-	bookingv1 "github.com/AntowQa/ai-for-developers-project-386/api/gen/booking/v1"
 	"github.com/AntowQa/ai-for-developers-project-386/api/internal/health"
 )
 
+// Run serves the booking HTTP API until the context is cancelled.
 func Run(ctx context.Context) error {
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
 		return errors.New("DATABASE_URL is required")
 	}
-
 	pool, err := pgxpool.New(ctx, dsn)
 	if err != nil {
 		return fmt.Errorf("database pool: %w", err)
@@ -37,53 +33,28 @@ func Run(ctx context.Context) error {
 		return fmt.Errorf("database ping: %w", err)
 	}
 
-	grpcAddr := env("GRPC_ADDR", "127.0.0.1:50051")
-	lis, err := net.Listen("tcp", grpcAddr)
+	addr := os.Getenv("HTTP_ADDR")
+	if addr == "" {
+		addr = ":8080"
+	}
+	listener, err := net.Listen("tcp", addr)
 	if err != nil {
-		return fmt.Errorf("grpc listen: %w", err)
+		return fmt.Errorf("http listen: %w", err)
 	}
 
-	grpcServer := grpc.NewServer()
-	bookingv1.RegisterHealthServiceServer(grpcServer, health.New(pool))
-	go func() {
-		_ = grpcServer.Serve(lis)
-	}()
-	defer grpcServer.GracefulStop()
-
-	mux := runtime.NewServeMux()
-	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
-	if err := bookingv1.RegisterHealthServiceHandlerFromEndpoint(ctx, mux, lis.Addr().String(), opts); err != nil {
-		return fmt.Errorf("grpc gateway: %w", err)
-	}
-
-	httpServer := &http.Server{
-		Addr:              env("HTTP_ADDR", ":8080"),
-		Handler:           mux,
-		ReadHeaderTimeout: 5 * time.Second,
-	}
-
-	errCh := make(chan error, 1)
-	go func() {
-		errCh <- httpServer.ListenAndServe()
-	}()
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /api/health", health.Handler(pool))
+	server := &http.Server{Handler: mux, ReadHeaderTimeout: 5 * time.Second}
+	done := make(chan error, 1)
+	go func() { done <- server.Serve(listener) }()
+	fmt.Printf("Listening on http://%s\n", listener.Addr())
 
 	select {
 	case <-ctx.Done():
-		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer shutdownCancel()
-		_ = httpServer.Shutdown(shutdownCtx)
-		return nil
-	case err := <-errCh:
-		if errors.Is(err, http.ErrServerClosed) {
-			return nil
-		}
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		return server.Shutdown(shutdownCtx)
+	case err := <-done:
 		return err
 	}
-}
-
-func env(key, fallback string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return fallback
 }

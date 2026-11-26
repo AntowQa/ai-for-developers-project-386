@@ -2,7 +2,6 @@
 go = "1.26.1"
 node = "24.14.0"
 pnpm = "10.26.0"
-buf = "1.57.2"
 golangci-lint = "2.11.2"
 hk = "2.14.0"
 
@@ -18,6 +17,10 @@ set -eu
 (cd tools/sdkgen && pnpm install --frozen-lockfile)
 hk install
 """
+
+[tasks.generate]
+description = "Generate OpenAPI and TypeScript types from TypeSpec"
+run = "pnpm --dir tools/sdkgen run generate"
 
 [tasks.check]
 description = "Regenerate contracts, lint, test, and build"

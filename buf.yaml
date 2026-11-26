@@ -1,9 +1,0 @@
-version: v2
-modules:
-  - path: proto
-  - path: third_party/googleapis
-lint:
-  use:
-    - STANDARD
-  ignore:
-    - third_party/googleapis

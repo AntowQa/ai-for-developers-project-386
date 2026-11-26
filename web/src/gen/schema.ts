@@ -11,8 +11,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Check pings PostgreSQL and returns OK when the database accepts connections. */
-    get: operations["HealthService_Check"];
+    get: operations["checkHealth"];
     put?: never;
     post?: never;
     delete?: never;
@@ -25,19 +24,16 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
-    protobufAny: {
-      "@type"?: string;
-    } & {
-      [key: string]: unknown;
+    DatabaseUnavailable: {
+      /** @enum {number} */
+      code: 14;
+      /** @enum {string} */
+      message: "database unavailable";
+      details: unknown[];
     };
-    rpcStatus: {
-      /** Format: int32 */
-      code?: number;
-      message?: string;
-      details?: components["schemas"]["protobufAny"][];
-    };
-    v1CheckResponse: {
-      status?: string;
+    Health: {
+      /** @enum {string} */
+      status: "ok";
     };
   };
   responses: never;
@@ -48,7 +44,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  HealthService_Check: {
+  checkHealth: {
     parameters: {
       query?: never;
       header?: never;
@@ -57,22 +53,22 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description A successful response. */
+      /** @description The request has succeeded. */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["v1CheckResponse"];
+          "application/json": components["schemas"]["Health"];
         };
       };
-      /** @description An unexpected error response. */
-      default: {
+      /** @description Service unavailable. */
+      503: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["rpcStatus"];
+          "application/json": components["schemas"]["DatabaseUnavailable"];
         };
       };
     };

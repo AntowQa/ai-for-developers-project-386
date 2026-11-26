@@ -4,12 +4,11 @@
 
 ## Устройство
 
-- `proto/` — источник контракта. Сейчас это `GET /api/health`.
-- `api/` — Go-процесс: gRPC внутри контейнера, HTTP отдаёт grpc-gateway. Перед прослушиванием порта процесс пингует PostgreSQL и выходит с ошибкой, если базы нет.
+- `tools/sdkgen/main.tsp` — источник HTTP-контракта. Сейчас это `GET /api/health`.
+- `api/` — HTTP-сервер на Go. Перед прослушиванием порта процесс проверяет соединение с PostgreSQL и завершается с ошибкой, если база недоступна.
 - `web/` — Vite, React, TypeScript, shadcn/ui. nginx отдаёт сборку и проксирует `/api/` на API.
-- `tools/sdkgen/` — генератор TypeScript SDK из OpenAPI. В проекте TypeScript 7, а `openapi-typescript` 7.13 работает на TypeScript 5, поэтому генератор лежит отдельно.
 - `compose.yaml` поднимает PostgreSQL, API и nginx. Порт базы наружу не публикуется. `compose.check.yaml` открывает её только на `127.0.0.1:54329` для `go test`.
-- Сгенерированные Go, OpenAPI и SDK коммитятся.
+- Сгенерированные OpenAPI и типы TypeScript для клиента коммитятся вместе с изменениями контракта.
 
 ## Коммиты
 
